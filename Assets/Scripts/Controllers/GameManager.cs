@@ -36,6 +36,12 @@ public class GameManager : MonoBehaviour
     }
 
 
+    [SerializeField] private GameObject itemBG;
+
+    [SerializeField] private ItemProfile[] itemProfiles;
+
+    [SerializeField] private GameObject itemCell;
+
     private GameSettings m_gameSettings;
 
 
@@ -44,6 +50,8 @@ public class GameManager : MonoBehaviour
     private UIMainManager m_uiMenu;
 
     private LevelCondition m_levelCondition;
+
+    private eLevelMode m_currentMode;
 
     private void Awake()
     {
@@ -81,10 +89,17 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public void RestartGame()
+    {
+        ClearLevel();
+        LoadLevel(m_currentMode);
+    }
+
     public void LoadLevel(eLevelMode mode)
     {
+        m_currentMode = mode;
         m_boardController = new GameObject("BoardController").AddComponent<BoardController>();
-        m_boardController.StartGame(this, m_gameSettings);
+        m_boardController.StartGame(this, m_gameSettings, itemBG, itemCell, itemProfiles);
 
         if (mode == eLevelMode.MOVES)
         {

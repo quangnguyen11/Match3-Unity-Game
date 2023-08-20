@@ -1,36 +1,42 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using DG.Tweening;
 
 [Serializable]
 public class Item
 {
+
+    public ItemProfile ItemProfile;
+
     public Cell Cell { get; private set; }
 
     public Transform View { get; private set; }
 
 
-    public virtual void SetView()
+    public virtual void SetView(GameObject item, ItemProfile[] itemProfiles)
     {
         string prefabname = GetPrefabName();
-
         if (!string.IsNullOrEmpty(prefabname))
         {
-            GameObject prefab = Resources.Load<GameObject>(prefabname);
-            if (prefab)
-            {
-                View = GameObject.Instantiate(prefab).transform;
-            }
+            View = item.Spawn().transform;
+            View.GetComponent<SpriteRenderer>().sprite = itemProfiles.Where(i => i.Name == prefabname).First().Sprites[1];
+
+            //GameObject prefab = Resources.Load<GameObject>(prefabname);
+            //if (prefab)
+            //{
+            //    View = GameObject.Instantiate(prefab).transform;
+            //    Debug.Log(itemProfiles.Where(i => i.Name == prefabname).First().Sprites[1].name);
+            //}
         }
     }
 
     protected virtual string GetPrefabName() { return string.Empty; }
 
-    public virtual void SetCell(Cell cell)
+    public virtual void SetCell(Cell cell, ItemProfile itemProfile)
     {
         Cell = cell;
+        ItemProfile = itemProfile;
     }
 
     internal void AnimationMoveToPosition()
@@ -101,8 +107,10 @@ public class Item
             View.DOScale(0.1f, 0.1f).OnComplete(
                 () =>
                 {
-                    GameObject.Destroy(View.gameObject);
+                    //GameObject.Destroy(View.gameObject);
+                    View.gameObject.Recycle();
                     View = null;
+                    Cell = null;
                 }
                 );
         }
@@ -122,7 +130,7 @@ public class Item
     {
         if (View)
         {
-            View.DOKill();
+            View.DOKill(true);
         }
     }
 
@@ -132,7 +140,8 @@ public class Item
 
         if (View)
         {
-            GameObject.Destroy(View.gameObject);
+            //GameObject.Destroy(View.gameObject);
+            View.gameObject.Recycle();
             View = null;
         }
     }

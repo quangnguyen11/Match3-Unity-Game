@@ -25,29 +25,35 @@ public class Board
 
     private int m_matchMin;
 
-    public Board(Transform transform, GameSettings gameSettings)
+    private ItemProfile[] itemProfiles;
+
+    private GameObject itemCell;
+
+    public Board(Transform transform, GameSettings gameSettings, GameObject itemBG, GameObject itemCell, ItemProfile[] itemProfiles)
     {
         m_root = transform;
 
         m_matchMin = gameSettings.MatchesMin;
 
+        this.itemProfiles = itemProfiles;
+        this.itemCell = itemCell;
         this.boardSizeX = gameSettings.BoardSizeX;
         this.boardSizeY = gameSettings.BoardSizeY;
 
         m_cells = new Cell[boardSizeX, boardSizeY];
 
-        CreateBoard();
+
+        CreateBoard(itemBG);
     }
 
-    private void CreateBoard()
+    private void CreateBoard(GameObject itemBG)
     {
         Vector3 origin = new Vector3(-boardSizeX * 0.5f + 0.5f, -boardSizeY * 0.5f + 0.5f, 0f);
-        GameObject prefabBG = Resources.Load<GameObject>(Constants.PREFAB_CELL_BACKGROUND);
         for (int x = 0; x < boardSizeX; x++)
         {
             for (int y = 0; y < boardSizeY; y++)
             {
-                GameObject go = GameObject.Instantiate(prefabBG);
+                GameObject go = itemBG.Spawn();
                 go.transform.position = origin + new Vector3(x, y, 0f);
                 go.transform.SetParent(m_root);
 
@@ -67,6 +73,36 @@ public class Board
                 if (x + 1 < boardSizeX) m_cells[x, y].NeighbourRight = m_cells[x + 1, y];
                 if (y > 0) m_cells[x, y].NeighbourBottom = m_cells[x, y - 1];
                 if (x > 0) m_cells[x, y].NeighbourLeft = m_cells[x - 1, y];
+
+
+                Cell cell = m_cells[x, y];
+                NormalItem item = new NormalItem();
+
+                List<NormalItem.eNormalType> types = new List<NormalItem.eNormalType>();
+                if (cell.NeighbourBottom != null)
+                {
+                    NormalItem nitem = cell.NeighbourBottom.Item as NormalItem;
+                    if (nitem != null)
+                    {
+                        types.Add(nitem.ItemType);
+                    }
+                }
+
+                if (cell.NeighbourLeft != null)
+                {
+                    NormalItem nitem = cell.NeighbourLeft.Item as NormalItem;
+                    if (nitem != null)
+                    {
+                        types.Add(nitem.ItemType);
+                    }
+                }
+
+                item.SetType(Utils.GetRandomNormalTypeExcept(types.ToArray()));
+                item.SetView(itemCell, itemProfiles);
+                item.SetViewRoot(m_root);
+
+                cell.Assign(item);
+                cell.ApplyItemPosition(false);
             }
         }
 
@@ -101,7 +137,7 @@ public class Board
                 }
 
                 item.SetType(Utils.GetRandomNormalTypeExcept(types.ToArray()));
-                item.SetView();
+                item.SetView(itemCell, itemProfiles);
                 item.SetViewRoot(m_root);
 
                 cell.Assign(item);
@@ -133,6 +169,8 @@ public class Board
                 list.RemoveAt(rnd);
             }
         }
+
+
     }
 
 
@@ -148,7 +186,7 @@ public class Board
                 NormalItem item = new NormalItem();
 
                 item.SetType(Utils.GetRandomNormalType());
-                item.SetView();
+                item.SetView(itemCell, itemProfiles);
                 item.SetViewRoot(m_root);
 
                 cell.Assign(item);
@@ -172,9 +210,11 @@ public class Board
     public void Swap(Cell cell1, Cell cell2, Action callback)
     {
         Item item = cell1.Item;
-        cell1.Free();
         Item item2 = cell2.Item;
+        
+        cell1.Free();
         cell1.Assign(item2);
+        
         cell2.Free();
         cell2.Assign(item);
 
@@ -282,7 +322,7 @@ public class Board
                 cellToConvert = matches[rnd];
             }
 
-            item.SetView();
+            item.SetView(itemCell, itemProfiles);
             item.SetViewRoot(m_root);
 
             cellToConvert.Free();
@@ -669,7 +709,8 @@ public class Board
                 Cell cell = m_cells[x, y];
                 cell.Clear();
 
-                GameObject.Destroy(cell.gameObject);
+                //GameObject.Destroy(cell.gameObject);
+                cell.gameObject.Recycle();
                 m_cells[x, y] = null;
             }
         }

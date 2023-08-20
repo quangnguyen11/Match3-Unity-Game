@@ -32,7 +32,6 @@ public class Cell : MonoBehaviour
             BoardY == other.BoardY && Mathf.Abs(BoardX - other.BoardX) == 1;
     }
 
-
     public void Free()
     {
         Item = null;
@@ -41,7 +40,7 @@ public class Cell : MonoBehaviour
     public void Assign(Item item)
     {
         Item = item;
-        Item.SetCell(this);
+        Item.SetCell(this, null);
     }
 
     public void ApplyItemPosition(bool withAppearAnimation)

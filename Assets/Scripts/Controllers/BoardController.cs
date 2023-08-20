@@ -8,7 +8,7 @@ using UnityEngine;
 public class BoardController : MonoBehaviour
 {
     public event Action OnMoveEvent = delegate { };
-
+    
     public bool IsBusy { get; private set; }
 
     private Board m_board;
@@ -31,7 +31,8 @@ public class BoardController : MonoBehaviour
 
     private bool m_gameOver;
 
-    public void StartGame(GameManager gameManager, GameSettings gameSettings)
+
+    public void StartGame(GameManager gameManager, GameSettings gameSettings, GameObject itemBG, GameObject itemCell, ItemProfile[] itemProfiles)
     {
         m_gameManager = gameManager;
 
@@ -41,16 +42,16 @@ public class BoardController : MonoBehaviour
 
         m_cam = Camera.main;
 
-        m_board = new Board(this.transform, gameSettings);
+        m_board = new Board(this.transform, gameSettings, itemBG, itemCell, itemProfiles);
 
-        Fill();
-    }
-
-    private void Fill()
-    {
-        m_board.Fill();
         FindMatchesAndCollapse();
     }
+
+    //private void Fill()
+    //{
+    //    m_board.Fill();
+    //    FindMatchesAndCollapse();
+    //}
 
     private void OnGameStateChange(GameManager.eStateGame state)
     {
@@ -83,6 +84,11 @@ public class BoardController : MonoBehaviour
                 m_timeAfterFill = 0f;
                 ShowHint();
             }
+        }
+
+        if (Input.GetKeyDown(KeyCode.S))
+        {
+            m_board.Shuffle();
         }
 
         if (Input.GetMouseButtonDown(0))
